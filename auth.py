@@ -1,10 +1,34 @@
-from google.oauth2 import service_account
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 def get_credentials():
-    SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+    creds = None
 
-    creds = service_account.Credentials.from_service_account_file(
-        "service_account.json",
-        scopes=SCOPES
-    )
+    try:
+        creds = Credentials.from_authorized_user_file(
+            "token.json",
+            SCOPES
+        )
+    except:
+        pass
+
+    if not creds or not creds.valid:
+
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                "client_secret_615333446923-tfmgng3t6tv4t2td9c5ks8t5vs2kr96f.apps.googleusercontent.com.json",
+                SCOPES
+            )
+
+            creds = flow.run_local_server(port=0)
+
+        with open("token.json", "w") as token:
+            token.write(creds.to_json())
+
     return creds
